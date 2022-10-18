@@ -7,7 +7,6 @@ import (
 	kf "github.com/segmentio/kafka-go"
 
 	"github.com/miromax42/learn-kafka/pkg/common"
-	"github.com/miromax42/learn-kafka/pkg/kafka_test"
 )
 
 type Writer struct {
@@ -15,10 +14,10 @@ type Writer struct {
 	kr   *kf.Writer
 }
 
-func NewWriter(name string) *Writer {
+func NewWriter(name string, cfg Config) *Writer {
 	writer := &kf.Writer{
-		Addr:  kf.TCP(kafka_test.Broker()),
-		Topic: kafka_test.Topic(),
+		Addr:  kf.TCP(cfg.Broker),
+		Topic: cfg.Topic,
 	}
 
 	return &Writer{name, writer}

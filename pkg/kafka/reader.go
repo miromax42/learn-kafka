@@ -3,13 +3,11 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/cockroachdb/errors"
 	kf "github.com/segmentio/kafka-go"
 
 	"github.com/miromax42/learn-kafka/pkg/common"
-	"github.com/miromax42/learn-kafka/pkg/kafka_test"
 )
 
 type Reader struct {
@@ -22,11 +20,11 @@ type Message struct {
 	Err error
 }
 
-func NewReader(name, group string) *Reader {
+func NewReader(name, group string, cfg Config) *Reader {
 	reader := kf.NewReader(
 		kf.ReaderConfig{
-			Brokers: []string{kafka_test.Broker()},
-			Topic:   kafka_test.Topic(),
+			Brokers: []string{cfg.Broker},
+			Topic:   cfg.Topic,
 			GroupID: group,
 		})
 
@@ -52,8 +50,6 @@ func (r *Reader) fetch(ctx context.Context) <-chan Message {
 				Err:     err,
 			}
 
-			time.Sleep(time.Second)
-
 			select {
 			case <-ctx.Done():
 				return
@@ -73,8 +69,6 @@ func (r *Reader) commit(ctx context.Context, inputStream <-chan Message) <-chan 
 
 		for {
 			for v := range common.OrDone(ctx.Done(), inputStream) {
-				time.Sleep(time.Second)
-
 				err := r.kr.CommitMessages(ctx, v.Message)
 				v.Err = errors.CombineErrors(v.Err, err)
 				fmt.Printf("commited:group=%s:%s:%s\n", r.group, r.name, string(v.Message.Value))

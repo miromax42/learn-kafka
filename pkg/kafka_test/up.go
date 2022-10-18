@@ -33,6 +33,7 @@ func New(ctx context.Context) error {
 	go func() {
 		<-ctx.Done()
 		compose.Down()
+		log.Println("Composed stoped")
 	}()
 
 	once := sync.Once{}
@@ -53,7 +54,7 @@ func New(ctx context.Context) error {
 }
 
 func Topic() string {
-	return "test-topic"
+	return "test-topic2"
 }
 
 func Broker() string {

@@ -14,19 +14,8 @@ import (
 )
 
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer func() {
-		log.Println("Stoping!")
-		cancel()
-		time.Sleep(10 * time.Second)
-	}()
-
-	err := kafka_test.New(ctx)
-	if err != nil {
-		log.Panic("failed to start kafka:", err)
-	}
-
-	workCtx, workCancel := context.WithTimeout(ctx, time.Second*10)
+	var err error
+	workCtx, workCancel := context.WithTimeout(context.Background(), time.Second*10)
 
 	var i int
 	workGen := common.RepeatFn(workCtx.Done(), func() string {
@@ -36,10 +25,15 @@ func main() {
 		return "msg" + strconv.Itoa(i)
 	})
 
-	reader1 := kafka.NewReader("r1", "test")
-	reader2 := kafka.NewReader("r2", "test")
-	reader3 := kafka.NewReader("r3", "another_group")
-	writer := kafka.NewWriter("w1")
+	cfg := kafka.Config{
+		Broker: kafka_test.Broker(),
+		Topic:  "test-topic3",
+	}
+
+	reader1 := kafka.NewReader("r1", "test", cfg)
+	reader2 := kafka.NewReader("r2", "test", cfg)
+	reader3 := kafka.NewReader("r3", "another_group", cfg)
+	writer := kafka.NewWriter("w1", cfg)
 
 	errStream := writer.Write(workCtx, workGen)
 	msgStream1 := reader1.Read(workCtx)
@@ -100,4 +94,6 @@ func main() {
 	}()
 
 	wg.Wait()
+
+	time.Sleep(1 * time.Second)
 }
